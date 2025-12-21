@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Loader2, ArrowLeftRight, Code2, Play } from "lucide-react";
+import { Search, ArrowLeftRight, Code2, Play } from "lucide-react";
 import TopNavbar from "@/components/TopNavbar";
 import ChangesSummary from "@/components/ChangesSummary";
 import SchemaTable from "@/components/SchemaTable";
@@ -109,12 +109,49 @@ export default function DiffViewerPage() {
     return (
       <div className="min-h-screen bg-background flex flex-col">
         <TopNavbar />
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center space-y-4">
-            <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto" />
-            <p className="text-lg">Extracting and comparing schemas...</p>
+        <main className="flex-1 container mx-auto p-6 space-y-6">
+          {/* Skeleton for Summary */}
+          <div className="space-y-3">
+            <div className="h-20 bg-zinc-800/50 rounded-lg animate-pulse" />
+            <div className="h-20 bg-zinc-800/50 rounded-lg animate-pulse" />
           </div>
-        </div>
+
+          {/* Skeleton for Main Card */}
+          <Card className="bg-zinc-900/50 border-zinc-700">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="h-6 w-48 bg-zinc-700 rounded animate-pulse" />
+                <div className="h-6 w-32 bg-zinc-700 rounded animate-pulse" />
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Skeleton for tabs */}
+              <div className="flex gap-4 mb-4">
+                <div className="h-9 w-24 bg-zinc-700 rounded animate-pulse" />
+                <div className="h-9 w-24 bg-zinc-700 rounded animate-pulse" />
+              </div>
+
+              {/* Skeleton for table grid */}
+              <div className="grid lg:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div className="h-5 w-32 bg-zinc-700 rounded animate-pulse" />
+                  <div className="h-48 bg-zinc-800/50 rounded-lg animate-pulse" />
+                  <div className="h-48 bg-zinc-800/50 rounded-lg animate-pulse" />
+                </div>
+                <div className="space-y-4">
+                  <div className="h-5 w-40 bg-zinc-700 rounded animate-pulse" />
+                  <div className="h-48 bg-zinc-800/50 rounded-lg animate-pulse" />
+                  <div className="h-48 bg-zinc-800/50 rounded-lg animate-pulse" />
+                  <div className="h-48 bg-zinc-800/50 rounded-lg animate-pulse" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <p className="text-center text-zinc-400">
+            Extracting and comparing schemas...
+          </p>
+        </main>
       </div>
     );
   }
@@ -182,6 +219,31 @@ export default function DiffViewerPage() {
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-9"
                   />
+                </div>
+              </div>
+
+              {/* Color Legend */}
+              <div className="flex flex-wrap items-center gap-4 py-3 px-4 rounded-lg bg-zinc-800/50 border border-zinc-700 mb-4">
+                <span className="text-xs text-zinc-400 font-medium">
+                  Color Legend:
+                </span>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-sm bg-emerald-500" />
+                  <span className="text-xs text-zinc-300">
+                    Added (new tables/columns)
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-sm bg-amber-500" />
+                  <span className="text-xs text-zinc-300">
+                    Modified (type/nullable changed)
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-sm bg-red-500" />
+                  <span className="text-xs text-zinc-300">
+                    Removed (dropped)
+                  </span>
                 </div>
               </div>
 
