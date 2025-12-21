@@ -57,32 +57,40 @@ export default function SchemaTable({
       </div>
 
       <ScrollArea className="max-h-[400px]">
-        <UITable>
-          <TableHeader>
-            <TableRow className="hover:bg-transparent">
-              <TableHead className="w-[180px]">Column</TableHead>
-              <TableHead className="w-[150px]">Type</TableHead>
-              <TableHead>Constraints</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {table.columns.map((column) => (
-              <TableRow key={column.name} className={getRowClass(column.name)}>
-                <TableCell className="font-medium font-mono text-sm">
-                  {column.name}
-                </TableCell>
-                <TableCell>
-                  <Badge variant="outline" className="font-mono text-xs">
-                    {column.type}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <ConstraintBadges column={column} />
-                </TableCell>
+        <div className="overflow-x-auto min-w-full">
+          <UITable className="min-w-[500px]">
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="w-[140px]">Column</TableHead>
+                <TableHead className="w-[160px]">Type</TableHead>
+                <TableHead className="min-w-[150px]">Constraints</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </UITable>
+            </TableHeader>
+            <TableBody>
+              {table.columns.map((column) => (
+                <TableRow
+                  key={column.name}
+                  className={getRowClass(column.name)}
+                >
+                  <TableCell className="font-medium font-mono text-sm">
+                    {column.name}
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant="outline"
+                      className="font-mono text-xs whitespace-nowrap"
+                    >
+                      {column.type}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <ConstraintBadges column={column} />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </UITable>
+        </div>
       </ScrollArea>
     </div>
   );

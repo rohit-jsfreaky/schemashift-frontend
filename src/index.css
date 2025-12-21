@@ -178,3 +178,13 @@ body {
   backdrop-filter: blur(12px);
   background: oklch(0.2 0 0 / 0.8);
 }
+
+/* Cursor pointer for interactive elements */
+button,
+[role="button"],
+[type="button"],
+[type="submit"],
+a,
+.cursor-pointer {
+  cursor: pointer !important;
+}

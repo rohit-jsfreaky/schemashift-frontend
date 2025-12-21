@@ -74,7 +74,7 @@ export default function LandingPage() {
         {/* Features Grid */}
         <section className="py-20 px-6 bg-muted/30">
           <div className="container mx-auto max-w-6xl">
-            <h2 className="text-3xl font-bold text-center mb-12">
+            <h2 className="text-3xl font-bold text-center mb-12 text-white">
               Everything you need for safe migrations
             </h2>
 
@@ -116,7 +116,7 @@ export default function LandingPage() {
         {/* How it works */}
         <section className="py-20 px-6">
           <div className="container mx-auto max-w-4xl">
-            <h2 className="text-3xl font-bold text-center mb-12">
+            <h2 className="text-3xl font-bold text-center mb-12 text-white">
               How it works
             </h2>
 
@@ -148,8 +148,10 @@ export default function LandingPage() {
         {/* CTA */}
         <section className="py-20 px-6 bg-muted/30">
           <div className="container mx-auto text-center max-w-2xl">
-            <h2 className="text-3xl font-bold mb-4">Ready to migrate?</h2>
-            <p className="text-muted-foreground mb-8">
+            <h2 className="text-3xl font-bold mb-4 text-white">
+              Ready to migrate?
+            </h2>
+            <p className="text-zinc-400 mb-8">
               Start comparing your database schemas in seconds.
             </p>
             <Link to="/connect">
@@ -181,12 +183,12 @@ function FeatureCard({
   description: string;
 }) {
   return (
-    <div className="p-6 rounded-xl bg-card border border-border hover:border-primary/50 transition-colors">
+    <div className="p-6 rounded-xl bg-zinc-900/50 border border-zinc-700 hover:border-primary/50 transition-colors">
       <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-4">
         {icon}
       </div>
-      <h3 className="font-semibold text-lg mb-2">{title}</h3>
-      <p className="text-muted-foreground text-sm">{description}</p>
+      <h3 className="font-semibold text-lg mb-2 text-white">{title}</h3>
+      <p className="text-zinc-400 text-sm">{description}</p>
     </div>
   );
 }
@@ -206,8 +208,8 @@ function Step({
         {number}
       </div>
       <div>
-        <h3 className="font-semibold text-lg">{title}</h3>
-        <p className="text-muted-foreground">{description}</p>
+        <h3 className="font-semibold text-lg text-white">{title}</h3>
+        <p className="text-zinc-400">{description}</p>
       </div>
     </div>
   );

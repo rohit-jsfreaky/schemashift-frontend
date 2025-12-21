@@ -45,12 +45,12 @@ export default function SQLPreviewModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
+      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col bg-zinc-900 border-zinc-700">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-2 text-white">
             SQL Migration Preview
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-zinc-400">
             Review the generated SQL before executing
           </DialogDescription>
         </DialogHeader>
@@ -60,7 +60,7 @@ export default function SQLPreviewModal({
           onValueChange={setActiveTab}
           className="flex-1 flex flex-col min-h-0"
         >
-          <TabsList className="w-full justify-start">
+          <TabsList className="w-full justify-start bg-zinc-800">
             <TabsTrigger value="up" className="gap-2">
               UP Migration
               {upMigration && (
@@ -86,29 +86,28 @@ export default function SQLPreviewModal({
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="up" className="flex-1 flex flex-col min-h-0 mt-4">
+          <TabsContent
+            value="up"
+            className="flex-1 flex flex-col min-h-0 mt-4 space-y-3"
+          >
             <SQLContent
               sql={upMigration?.fullSql || ""}
               onCopy={() => handleCopy(upMigration?.fullSql || "")}
               copied={copied}
+              warnings={upMigration?.warnings}
             />
-            {upMigration?.warnings && upMigration.warnings.length > 0 && (
-              <Warnings warnings={upMigration.warnings} />
-            )}
           </TabsContent>
 
           <TabsContent
             value="down"
-            className="flex-1 flex flex-col min-h-0 mt-4"
+            className="flex-1 flex flex-col min-h-0 mt-4 space-y-3"
           >
             <SQLContent
               sql={downMigration?.fullSql || ""}
               onCopy={() => handleCopy(downMigration?.fullSql || "")}
               copied={copied}
+              warnings={downMigration?.warnings}
             />
-            {downMigration?.warnings && downMigration.warnings.length > 0 && (
-              <Warnings warnings={downMigration.warnings} />
-            )}
           </TabsContent>
         </Tabs>
 
@@ -140,60 +139,75 @@ function SQLContent({
   sql,
   onCopy,
   copied,
+  warnings,
 }: {
   sql: string;
   onCopy: () => void;
   copied: boolean;
+  warnings?: string[];
 }) {
-  return (
-    <div className="flex-1 min-h-0 relative">
-      <Button
-        variant="ghost"
-        size="sm"
-        className="absolute top-2 right-2 z-10"
-        onClick={onCopy}
-      >
-        {copied ? (
-          <>
-            <Check className="h-4 w-4 mr-1" /> Copied
-          </>
-        ) : (
-          <>
-            <Copy className="h-4 w-4 mr-1" /> Copy
-          </>
-        )}
-      </Button>
-      <ScrollArea className="h-[400px] rounded-lg border border-border">
-        <SyntaxHighlighter
-          language="sql"
-          style={oneDark}
-          showLineNumbers
-          wrapLongLines
-          customStyle={{
-            margin: 0,
-            borderRadius: "0.5rem",
-            fontSize: "0.875rem",
-            minHeight: "100%",
-          }}
-        >
-          {sql || "-- No SQL generated"}
-        </SyntaxHighlighter>
-      </ScrollArea>
-    </div>
-  );
-}
+  const hasWarnings = warnings && warnings.length > 0;
+  const sqlHeight = hasWarnings ? "h-[280px]" : "h-[350px]";
 
-function Warnings({ warnings }: { warnings: string[] }) {
   return (
-    <div className="mt-3 space-y-2">
-      {warnings.map((warning, index) => (
-        <Alert key={index} className="border-amber-500/50 bg-amber-500/10">
-          <AlertTriangle className="h-4 w-4 text-amber-400" />
-          <AlertDescription className="text-amber-300/80 text-sm">
-            {warning}
-          </AlertDescription>
-        </Alert>
-      ))}
+    <div className="flex flex-col gap-3">
+      {/* SQL Code */}
+      <div className="relative">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="absolute top-2 right-2 z-10 text-zinc-300 hover:text-white"
+          onClick={onCopy}
+        >
+          {copied ? (
+            <>
+              <Check className="h-4 w-4 mr-1" /> Copied
+            </>
+          ) : (
+            <>
+              <Copy className="h-4 w-4 mr-1" /> Copy
+            </>
+          )}
+        </Button>
+        <ScrollArea
+          className={`${sqlHeight} rounded-lg border border-zinc-700`}
+        >
+          <SyntaxHighlighter
+            language="sql"
+            style={oneDark}
+            showLineNumbers
+            wrapLongLines
+            customStyle={{
+              margin: 0,
+              borderRadius: "0.5rem",
+              fontSize: "0.875rem",
+              minHeight: "100%",
+              background: "#1a1a1a",
+            }}
+          >
+            {sql || "-- No SQL generated"}
+          </SyntaxHighlighter>
+        </ScrollArea>
+      </div>
+
+      {/* Warnings - separate scrollable section */}
+      {hasWarnings && (
+        <ScrollArea className="h-[100px] rounded-lg">
+          <div className="space-y-2 pr-4">
+            {warnings.map((warning, index) => (
+              <Alert
+                key={index}
+                className="border-amber-500/50 bg-amber-500/10 py-2"
+              >
+                <AlertTriangle className="h-4 w-4 text-amber-400" />
+                <AlertDescription className="text-amber-300/80 text-xs">
+                  {warning}
+                </AlertDescription>
+              </Alert>
+            ))}
+          </div>
+        </ScrollArea>
+      )}
     </div>
   );
 }
