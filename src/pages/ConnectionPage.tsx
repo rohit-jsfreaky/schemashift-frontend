@@ -82,14 +82,42 @@ export default function ConnectionPage() {
           </CardHeader>
 
           <CardContent className="space-y-6">
-            {/* Staging Connection */}
+            {/* Help Banner */}
+            <div className="p-4 rounded-lg bg-zinc-800/50 border border-zinc-700 text-sm">
+              <p className="text-zinc-300 mb-2">
+                <strong className="text-white">How it works:</strong>{" "}
+                SchemaShift compares the{" "}
+                <strong className="text-emerald-400">Source</strong> database
+                schema with the{" "}
+                <strong className="text-amber-400">Target</strong> database and
+                generates SQL to make Target match Source.
+              </p>
+              <p className="text-zinc-400 text-xs">
+                Example: If Source has a new "phone" column that Target doesn't
+                have, we'll generate ALTER TABLE to add it to Target.
+              </p>
+            </div>
+
+            {/* Source Connection */}
             <div className="space-y-2">
-              <Label htmlFor="staging" className="text-base font-medium">
-                Staging Database (Source)
-              </Label>
+              <div className="flex items-center gap-2">
+                <Label
+                  htmlFor="staging"
+                  className="text-base font-medium text-emerald-400"
+                >
+                  🟢 Source Database
+                </Label>
+                <span className="text-xs text-zinc-500 border border-zinc-700 px-2 py-0.5 rounded">
+                  Your latest/newer schema
+                </span>
+              </div>
+              <p className="text-xs text-zinc-400 -mt-1">
+                This is the database with the NEWER schema (e.g., your local dev
+                or the branch with new features)
+              </p>
               <Textarea
                 id="staging"
-                placeholder="postgresql://user:password@host:5432/staging_db"
+                placeholder="postgresql://user:password@host:5432/source_db"
                 value={staging}
                 onChange={(e) => setStaging(e.target.value)}
                 className="font-mono text-sm h-20 resize-none"
@@ -104,14 +132,26 @@ export default function ConnectionPage() {
               )}
             </div>
 
-            {/* Dev Connection */}
+            {/* Target Connection */}
             <div className="space-y-2">
-              <Label htmlFor="dev" className="text-base font-medium">
-                Development Database (Target)
-              </Label>
+              <div className="flex items-center gap-2">
+                <Label
+                  htmlFor="dev"
+                  className="text-base font-medium text-amber-400"
+                >
+                  🟠 Target Database
+                </Label>
+                <span className="text-xs text-zinc-500 border border-zinc-700 px-2 py-0.5 rounded">
+                  Where to apply changes
+                </span>
+              </div>
+              <p className="text-xs text-zinc-400 -mt-1">
+                This is the database you want to UPDATE (e.g.,
+                production/staging that needs the new schema)
+              </p>
               <Textarea
                 id="dev"
-                placeholder="postgresql://user:password@host:5432/dev_db"
+                placeholder="postgresql://user:password@host:5432/target_db"
                 value={dev}
                 onChange={(e) => setDev(e.target.value)}
                 className="font-mono text-sm h-20 resize-none"

@@ -29,11 +29,26 @@ export function useMigrationExecution() {
         );
         setResult(response);
         return response;
-      } catch (err) {
-        const message =
-          err instanceof Error ? err.message : "Migration execution failed";
+      } catch (err: unknown) {
+        // Extract meaningful error from axios response
+        let message = "Migration execution failed";
+
+        if (err && typeof err === "object" && "response" in err) {
+          const axiosError = err as {
+            response?: { data?: { error?: string; message?: string } };
+          };
+          const data = axiosError.response?.data;
+          if (data?.error) {
+            message = data.error;
+          } else if (data?.message) {
+            message = data.message;
+          }
+        } else if (err instanceof Error) {
+          message = err.message;
+        }
+
         setError(message);
-        throw err;
+        throw new Error(message);
       } finally {
         setIsExecuting(false);
       }

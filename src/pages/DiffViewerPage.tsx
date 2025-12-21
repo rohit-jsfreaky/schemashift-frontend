@@ -77,20 +77,18 @@ export default function DiffViewerPage() {
   const handleExecute = async () => {
     if (!upMigration || !devDatabase) return;
 
-    try {
-      const result = await execute(
-        devConnectionString,
-        upMigration.fullSql,
-        `migration_${Date.now()}`,
-        "up",
-        devDatabase
-      );
-      setExecutionResult(result);
-      setShowExecuteConfirm(false);
-      navigate("/results");
-    } catch {
-      // Error handled by hook
-    }
+    const result = await execute(
+      devConnectionString,
+      upMigration.fullSql,
+      `migration_${Date.now()}`,
+      "up",
+      devDatabase
+    );
+
+    // Only navigate on success
+    setExecutionResult(result);
+    setShowExecuteConfirm(false);
+    navigate("/results");
   };
 
   // Filter tables by search term
@@ -249,23 +247,35 @@ export default function DiffViewerPage() {
 
               <TabsContent value="tables">
                 <div className="grid lg:grid-cols-2 gap-6">
-                  {/* Staging Schema */}
+                  {/* Source Schema */}
                   <div className="space-y-4">
-                    <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wider">
-                      Staging ({stagingFiltered.length} tables)
+                    <h3 className="font-semibold text-sm text-emerald-400 uppercase tracking-wider">
+                      🟢 Source ({stagingFiltered.length} tables)
                     </h3>
                     <ScrollArea className="h-[600px] pr-4">
                       <div className="space-y-4">
                         {stagingFiltered.map((table) => {
-                          const isRemoved =
-                            diff?.differences.removedTables.some(
-                              (t) => t.name === table.name
-                            );
+                          // Tables that exist only in Source = will be ADDED to Target
+                          const isAdded = diff?.differences.addedTables.some(
+                            (t) => t.name === table.name
+                          );
+                          // Columns in Source that don't exist in Target = will be ADDED
+                          const addedCols =
+                            diff?.differences.addedColumns
+                              .filter((c) => c.table === table.name)
+                              .map((c) => c.column.name) || [];
+                          // Modified columns
+                          const modifiedCols =
+                            diff?.differences.modifiedColumns
+                              .filter((c) => c.table === table.name)
+                              .map((c) => c.columnName) || [];
                           return (
                             <SchemaTable
                               key={table.name}
                               table={table}
-                              highlightType={isRemoved ? "removed" : undefined}
+                              highlightType={isAdded ? "added" : undefined}
+                              addedColumns={addedCols}
+                              modifiedColumns={modifiedCols}
                             />
                           );
                         })}
@@ -273,10 +283,10 @@ export default function DiffViewerPage() {
                     </ScrollArea>
                   </div>
 
-                  {/* Dev Schema */}
+                  {/* Target Schema */}
                   <div className="space-y-4">
-                    <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wider">
-                      Development ({devFiltered.length} tables)
+                    <h3 className="font-semibold text-sm text-amber-400 uppercase tracking-wider">
+                      🟠 Target ({devFiltered.length} tables)
                     </h3>
                     <ScrollArea className="h-[600px] pr-4">
                       <div className="space-y-4">
