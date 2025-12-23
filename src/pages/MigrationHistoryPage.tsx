@@ -1,34 +1,20 @@
 import { useState, useEffect } from "react";
 import {
   Search,
-  ChevronLeft,
-  ChevronRight,
   Eye,
   CheckCircle2,
   XCircle,
   ArrowUpCircle,
   ArrowDownCircle,
   Loader2,
+  Clock,
+  Database,
 } from "lucide-react";
-import TopNavbar from "@/components/TopNavbar";
+import MainLayout from "@/components/MainLayout";
+import { PremiumTable } from "@/components/PremiumTable";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -36,7 +22,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { useMigration } from "@/context/MigrationContext";
@@ -110,319 +95,281 @@ export default function MigrationHistoryPage() {
       )
     : migrations;
 
-  const totalPages = Math.ceil(total / limit);
+  const columns = [
+    {
+      header: "Timestamp",
+      cell: (m: MigrationRecord) => (
+        <div className="flex flex-col">
+          <span className="font-mono text-xs text-zinc-400">
+            {new Date(m.timestamp).toLocaleDateString()}
+          </span>
+          <span className="text-xs text-zinc-500">
+            {new Date(m.timestamp).toLocaleTimeString()}
+          </span>
+        </div>
+      ),
+    },
+    {
+      header: "Migration Name",
+      cell: (m: MigrationRecord) => (
+        <div className="flex items-center gap-2">
+          <span className="font-medium text-zinc-200">{m.migrationName}</span>
+        </div>
+      ),
+    },
+    {
+      header: "Target DB",
+      cell: (m: MigrationRecord) => (
+        <Badge
+          variant="outline"
+          className="font-mono text-xs border-zinc-700 text-zinc-400 bg-zinc-900/50"
+        >
+          {m.targetDatabase}
+        </Badge>
+      ),
+    },
+    {
+      header: "Direction",
+      cell: (m: MigrationRecord) => (
+        <div
+          className={`flex items-center gap-1.5 text-xs font-medium ${
+            m.direction === "up" ? "text-emerald-400" : "text-amber-400"
+          }`}
+        >
+          {m.direction === "up" ? (
+            <ArrowUpCircle className="h-3.5 w-3.5" />
+          ) : (
+            <ArrowDownCircle className="h-3.5 w-3.5" />
+          )}
+          <span className="uppercase">{m.direction}</span>
+        </div>
+      ),
+    },
+    {
+      header: "Status",
+      cell: (m: MigrationRecord) => (
+        <div
+          className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${
+            m.status === "success"
+              ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+              : "bg-red-500/10 text-red-400 border-red-500/20"
+          }`}
+        >
+          {m.status === "success" ? (
+            <div className="h-1.5 w-1.5 rounded-full bg-emerald-400 mr-1.5 animate-pulse" />
+          ) : (
+            <div className="h-1.5 w-1.5 rounded-full bg-red-400 mr-1.5" />
+          )}
+          {m.status === "success" ? "Success" : "Failed"}
+        </div>
+      ),
+    },
+    {
+      header: "Duration",
+      cell: (m: MigrationRecord) => (
+        <span className="font-mono text-xs text-zinc-500 flex items-center gap-1">
+          <Clock className="h-3 w-3" />
+          {m.duration}ms
+        </span>
+      ),
+    },
+    {
+      header: "",
+      className: "w-[80px]",
+      cell: (m: MigrationRecord) => (
+        <div className="flex justify-end">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleViewDetails(m);
+            }}
+            className="h-8 w-8 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-full"
+            disabled={viewLoading === m.id}
+          >
+            {viewLoading === m.id ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Eye className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
+      ),
+    },
+  ];
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <TopNavbar />
+    <MainLayout>
+      <div className="space-y-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-zinc-400">
+              Migration History
+            </h1>
+            <p className="text-zinc-400 text-sm mt-1">
+              Audit log of all database schema changes.
+            </p>
+          </div>
+          <div className="relative w-full md:w-72 group">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 group-focus-within:text-zinc-300 transition-colors" />
+            <Input
+              placeholder="Search history..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9 bg-zinc-900/50 border-zinc-800 text-zinc-200 placeholder:text-zinc-600 focus:ring-zinc-700 focus:border-zinc-700 transition-all"
+            />
+          </div>
+        </div>
 
-      <main className="flex-1 container mx-auto p-6">
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>Migration History</CardTitle>
-                <CardDescription>View all past migrations</CardDescription>
-              </div>
-              <div className="relative w-64">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search migrations..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="pl-9"
-                />
-              </div>
+        {!devConnectionString ? (
+          <div className="rounded-xl border border-zinc-800 bg-zinc-900/30 p-12 text-center backdrop-blur-sm">
+            <div className="w-16 h-16 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center mx-auto mb-4">
+              <Database className="h-8 w-8 text-zinc-600" />
             </div>
-          </CardHeader>
+            <h3 className="text-lg font-medium text-white mb-2">
+              No Database Connected
+            </h3>
+            <p className="text-zinc-500 max-w-sm mx-auto mb-6">
+              Connect to a database to verify schemas and view migration
+              history.
+            </p>
+            <Button
+              variant="outline"
+              className="border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+            >
+              Connect Database
+            </Button>
+          </div>
+        ) : (
+          <>
+            <PremiumTable
+              data={filteredMigrations}
+              columns={columns}
+              isLoading={loading}
+              emptyMessage="No migrations recorded yet."
+              onRowClick={(m) => handleViewDetails(m)}
+            />
+          </>
+        )}
 
-          <CardContent>
-            {!devConnectionString ? (
-              <div className="text-center py-12 text-muted-foreground">
-                <p>Connect to a database to view migration history.</p>
-              </div>
-            ) : (
-              <>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Timestamp</TableHead>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Target</TableHead>
-                      <TableHead>Direction</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Duration</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {loading ? (
-                      // Skeleton loading rows
-                      <>
-                        {[1, 2, 3, 4, 5].map((i) => (
-                          <TableRow key={i}>
-                            <TableCell>
-                              <div className="h-4 w-28 bg-zinc-800 rounded animate-pulse" />
-                            </TableCell>
-                            <TableCell>
-                              <div className="h-4 w-40 bg-zinc-800 rounded animate-pulse" />
-                            </TableCell>
-                            <TableCell>
-                              <div className="h-5 w-16 bg-zinc-800 rounded animate-pulse" />
-                            </TableCell>
-                            <TableCell>
-                              <div className="h-5 w-14 bg-zinc-800 rounded animate-pulse" />
-                            </TableCell>
-                            <TableCell>
-                              <div className="h-5 w-12 bg-zinc-800 rounded animate-pulse" />
-                            </TableCell>
-                            <TableCell>
-                              <div className="h-4 w-16 bg-zinc-800 rounded animate-pulse" />
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <div className="h-8 w-16 bg-zinc-800 rounded animate-pulse ml-auto" />
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </>
-                    ) : filteredMigrations.length === 0 ? (
-                      <TableRow>
-                        <TableCell
-                          colSpan={7}
-                          className="text-center py-8 text-muted-foreground"
-                        >
-                          No migrations found
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      filteredMigrations.map((migration) => (
-                        <TableRow key={migration.id}>
-                          <TableCell className="text-sm">
-                            {new Date(migration.timestamp).toLocaleString()}
-                          </TableCell>
-                          <TableCell className="font-medium text-sm">
-                            {migration.migrationName}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline">
-                              {migration.targetDatabase}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Badge
-                              variant={
-                                migration.direction === "up"
-                                  ? "default"
-                                  : "secondary"
-                              }
-                              className="gap-1"
-                            >
-                              {migration.direction === "up" ? (
-                                <ArrowUpCircle className="h-3 w-3" />
-                              ) : (
-                                <ArrowDownCircle className="h-3 w-3" />
-                              )}
-                              {migration.direction.toUpperCase()}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Badge
-                              variant={
-                                migration.status === "success"
-                                  ? "default"
-                                  : "destructive"
-                              }
-                              className="gap-1"
-                            >
-                              {migration.status === "success" ? (
-                                <CheckCircle2 className="h-3 w-3" />
-                              ) : (
-                                <XCircle className="h-3 w-3" />
-                              )}
-                              {migration.status === "success" ? "OK" : "Failed"}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-sm text-muted-foreground">
-                            {migration.duration}ms
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleViewDetails(migration)}
-                              className="gap-1"
-                              disabled={viewLoading === migration.id}
-                            >
-                              {viewLoading === migration.id ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                              ) : (
-                                <Eye className="h-4 w-4" />
-                              )}
-                              {viewLoading === migration.id
-                                ? "Loading..."
-                                : "View"}
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
+        {/* Migration Details Dialog */}
+        <Dialog open={showDetails} onOpenChange={setShowDetails}>
+          <DialogContent className="max-w-3xl max-h-[85vh] bg-[#0a0a0a] border-zinc-800 text-zinc-200 flex flex-col overflow-hidden shadow-2xl shadow-black/90">
+            <DialogHeader className="shrink-0 border-b border-zinc-900 pb-4">
+              <DialogTitle className="text-xl text-white flex items-center gap-3">
+                <span className="font-mono text-zinc-500">
+                  #{selectedMigration?.id.slice(0, 6)}
+                </span>
+                {selectedMigration?.migrationName}
+                {selectedMigration?.status === "success" ? (
+                  <Badge className="bg-emerald-500/10 text-emerald-400 border-none hover:bg-emerald-500/20">
+                    Success
+                  </Badge>
+                ) : (
+                  <Badge
+                    variant="destructive"
+                    className="bg-red-500/10 text-red-400 border-none"
+                  >
+                    Failed
+                  </Badge>
+                )}
+              </DialogTitle>
+              <DialogDescription className="text-zinc-500 text-sm flex items-center gap-3 mt-2">
+                <span className="flex items-center gap-1.5">
+                  <Clock className="h-3.5 w-3.5" />
+                  {selectedMigration &&
+                    new Date(selectedMigration.timestamp).toLocaleString()}
+                </span>
+                <span>•</span>
+                <span>{selectedMigration?.targetDatabase}</span>
+              </DialogDescription>
+            </DialogHeader>
 
-                {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className="flex items-center justify-between mt-4">
-                    <p className="text-sm text-muted-foreground">
-                      Showing {(page - 1) * limit + 1}-
-                      {Math.min(page * limit, total)} of {total}
+            {selectedMigration && (
+              <div className="flex-1 overflow-y-auto space-y-6 pt-6 pr-2">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/50">
+                    <p className="text-xs text-zinc-500 uppercase tracking-wider font-semibold mb-2">
+                      Direction
                     </p>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setPage((p) => Math.max(1, p - 1))}
-                        disabled={page === 1}
-                      >
-                        <ChevronLeft className="h-4 w-4" />
-                      </Button>
-                      <span className="text-sm">
-                        Page {page} of {totalPages}
+                    <div
+                      className={`flex items-center gap-2 font-medium ${
+                        selectedMigration.direction === "up"
+                          ? "text-emerald-400"
+                          : "text-amber-400"
+                      }`}
+                    >
+                      {selectedMigration.direction === "up" ? (
+                        <ArrowUpCircle className="h-4 w-4" />
+                      ) : (
+                        <ArrowDownCircle className="h-4 w-4" />
+                      )}
+                      <span className="uppercase">
+                        {selectedMigration.direction}
                       </span>
-                      <Button
+                    </div>
+                  </div>
+                  <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/50">
+                    <p className="text-xs text-zinc-500 uppercase tracking-wider font-semibold mb-2">
+                      Duration
+                    </p>
+                    <div className="flex items-center gap-2 font-mono text-zinc-300">
+                      <Clock className="h-4 w-4 text-zinc-600" />
+                      {selectedMigration.duration}ms
+                    </div>
+                  </div>
+                </div>
+
+                {/* Error Message */}
+                {selectedMigration.errorMessage && (
+                  <div className="p-4 rounded-xl bg-red-950/20 border border-red-900/40">
+                    <p className="text-sm font-medium text-red-400 mb-2 flex items-center gap-2">
+                      <XCircle className="h-4 w-4" /> Error Details
+                    </p>
+                    <p className="text-sm text-red-300/70 font-mono break-all leading-relaxed">
+                      {selectedMigration.errorMessage}
+                    </p>
+                  </div>
+                )}
+
+                {/* SQL Executed */}
+                {selectedMigration.sqlExecuted && (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium text-zinc-400 uppercase tracking-wider">
+                        SQL Statement
+                      </p>
+                      <Badge
                         variant="outline"
-                        size="sm"
-                        onClick={() =>
-                          setPage((p) => Math.min(totalPages, p + 1))
-                        }
-                        disabled={page === totalPages}
+                        className="border-zinc-800 text-zinc-600 text-[10px] font-mono"
                       >
-                        <ChevronRight className="h-4 w-4" />
-                      </Button>
+                        Read-only
+                      </Badge>
+                    </div>
+                    <div className="rounded-xl border border-zinc-800 bg-[#050505] overflow-hidden">
+                      <SyntaxHighlighter
+                        language="sql"
+                        style={oneDark}
+                        showLineNumbers
+                        customStyle={{
+                          margin: 0,
+                          padding: "1.5rem",
+                          fontSize: "0.80rem",
+                          lineHeight: "1.5",
+                          background: "transparent",
+                        }}
+                      >
+                        {selectedMigration.sqlExecuted}
+                      </SyntaxHighlighter>
                     </div>
                   </div>
                 )}
-              </>
-            )}
-          </CardContent>
-        </Card>
-      </main>
-
-      {/* Migration Details Dialog */}
-      <Dialog open={showDetails} onOpenChange={setShowDetails}>
-        <DialogContent className="max-w-3xl max-h-[85vh] bg-zinc-900 border-zinc-700 flex flex-col overflow-hidden">
-          <DialogHeader className="shrink-0">
-            <DialogTitle className="text-xl text-white flex items-center gap-2">
-              Migration Details
-              {selectedMigration?.status === "success" ? (
-                <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/50">
-                  <CheckCircle2 className="h-3 w-3 mr-1" />
-                  Success
-                </Badge>
-              ) : (
-                <Badge variant="destructive">
-                  <XCircle className="h-3 w-3 mr-1" />
-                  Failed
-                </Badge>
-              )}
-            </DialogTitle>
-            <DialogDescription className="text-zinc-400 font-mono text-sm truncate">
-              {selectedMigration?.migrationName}
-            </DialogDescription>
-          </DialogHeader>
-
-          {selectedMigration && (
-            <div className="flex-1 overflow-y-auto space-y-5 pr-2">
-              {/* Info Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <div className="p-3 rounded-lg bg-zinc-800/50 border border-zinc-700">
-                  <p className="text-xs text-zinc-500 uppercase tracking-wide mb-1">
-                    ID
-                  </p>
-                  <p
-                    className="font-mono text-xs text-zinc-300 truncate"
-                    title={selectedMigration.id}
-                  >
-                    {selectedMigration.id.slice(0, 8)}...
-                  </p>
-                </div>
-                <div className="p-3 rounded-lg bg-zinc-800/50 border border-zinc-700">
-                  <p className="text-xs text-zinc-500 uppercase tracking-wide mb-1">
-                    Timestamp
-                  </p>
-                  <p className="text-xs text-zinc-300">
-                    {new Date(selectedMigration.timestamp).toLocaleString()}
-                  </p>
-                </div>
-                <div className="p-3 rounded-lg bg-zinc-800/50 border border-zinc-700">
-                  <p className="text-xs text-zinc-500 uppercase tracking-wide mb-1">
-                    Direction
-                  </p>
-                  <Badge
-                    variant={
-                      selectedMigration.direction === "up"
-                        ? "default"
-                        : "secondary"
-                    }
-                    className="gap-1"
-                  >
-                    {selectedMigration.direction === "up" ? (
-                      <ArrowUpCircle className="h-3 w-3" />
-                    ) : (
-                      <ArrowDownCircle className="h-3 w-3" />
-                    )}
-                    {selectedMigration.direction.toUpperCase()}
-                  </Badge>
-                </div>
-                <div className="p-3 rounded-lg bg-zinc-800/50 border border-zinc-700">
-                  <p className="text-xs text-zinc-500 uppercase tracking-wide mb-1">
-                    Duration
-                  </p>
-                  <p className="text-sm text-zinc-300 font-medium">
-                    {selectedMigration.duration}ms
-                  </p>
-                </div>
               </div>
-
-              {/* Error Message */}
-              {selectedMigration.errorMessage && (
-                <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/30">
-                  <p className="text-sm font-medium text-red-400 mb-1">
-                    ⚠️ Error Message
-                  </p>
-                  <p className="text-sm text-red-300/80 font-mono break-words">
-                    {selectedMigration.errorMessage}
-                  </p>
-                </div>
-              )}
-
-              {/* SQL Executed */}
-              {selectedMigration.sqlExecuted && (
-                <div className="flex flex-col">
-                  <p className="text-sm font-medium text-zinc-300 mb-2">
-                    SQL Executed
-                  </p>
-                  <div className="rounded-lg border border-zinc-700 bg-zinc-950 overflow-auto max-h-64">
-                    <SyntaxHighlighter
-                      language="sql"
-                      style={oneDark}
-                      showLineNumbers
-                      customStyle={{
-                        margin: 0,
-                        padding: "1rem",
-                        fontSize: "0.75rem",
-                        background: "transparent",
-                        minWidth: "max-content",
-                      }}
-                    >
-                      {selectedMigration.sqlExecuted}
-                    </SyntaxHighlighter>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-    </div>
+            )}
+          </DialogContent>
+        </Dialog>
+      </div>
+    </MainLayout>
   );
 }

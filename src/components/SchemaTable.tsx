@@ -1,14 +1,5 @@
 import { Key, Link2, Fingerprint, Ban } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import {
-  Table as UITable,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import type { Table, Column } from "@/types";
 
 interface SchemaTableProps {
@@ -56,74 +47,80 @@ export default function SchemaTable({
         </div>
       </div>
 
-      <ScrollArea className="max-h-[400px]">
-        <div className="overflow-x-auto min-w-full">
-          <UITable className="min-w-[500px]">
-            <TableHeader>
-              <TableRow className="hover:bg-transparent">
-                <TableHead className="w-[140px]">Column</TableHead>
-                <TableHead className="w-[160px]">Type</TableHead>
-                <TableHead className="min-w-[150px]">Constraints</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {table.columns.map((column) => (
-                <TableRow
-                  key={column.name}
-                  className={getRowClass(column.name)}
-                >
-                  <TableCell className="font-medium font-mono text-sm">
-                    {column.name}
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant="outline"
-                      className="font-mono text-xs whitespace-nowrap"
-                    >
-                      {column.type}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <ConstraintBadges column={column} />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </UITable>
-        </div>
-      </ScrollArea>
+      <div className="border-t border-zinc-800 overflow-x-auto">
+        <table className="w-full min-w-[500px] text-sm">
+          <thead className="bg-zinc-900/50">
+            <tr className="border-b border-zinc-800">
+              <th className="w-[140px] px-4 py-3 text-left text-zinc-400 font-medium whitespace-nowrap">
+                Column
+              </th>
+              <th className="w-[160px] px-4 py-3 text-left text-zinc-400 font-medium whitespace-nowrap">
+                Type
+              </th>
+              <th className="min-w-[200px] px-4 py-3 text-left text-zinc-400 font-medium whitespace-nowrap">
+                Constraints
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {table.columns.map((column) => (
+              <tr
+                key={column.name}
+                className={`border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors ${getRowClass(
+                  column.name
+                )}`}
+              >
+                <td className="px-4 py-2 font-medium font-mono text-sm text-zinc-200 whitespace-nowrap">
+                  {column.name}
+                </td>
+                <td className="px-4 py-2 whitespace-nowrap">
+                  <Badge
+                    variant="outline"
+                    className="font-mono text-xs whitespace-nowrap bg-zinc-900 border-zinc-700 text-zinc-400"
+                  >
+                    {column.type}
+                  </Badge>
+                </td>
+                <td className="px-4 py-2 whitespace-nowrap">
+                  <ConstraintBadges column={column} />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
 
 function ConstraintBadges({ column }: { column: Column }) {
   return (
-    <div className="flex flex-wrap gap-1">
+    <div className="flex gap-1">
       {column.isPrimaryKey && (
-        <Badge variant="secondary" className="text-xs gap-1">
+        <Badge variant="secondary" className="text-xs gap-1 whitespace-nowrap">
           <Key className="h-3 w-3" /> PK
         </Badge>
       )}
       {column.isForeignKey && (
-        <Badge variant="secondary" className="text-xs gap-1">
+        <Badge variant="secondary" className="text-xs gap-1 whitespace-nowrap">
           <Link2 className="h-3 w-3" /> FK
         </Badge>
       )}
       {column.isUnique && !column.isPrimaryKey && (
-        <Badge variant="secondary" className="text-xs gap-1">
+        <Badge variant="secondary" className="text-xs gap-1 whitespace-nowrap">
           <Fingerprint className="h-3 w-3" /> UNIQUE
         </Badge>
       )}
       {!column.nullable && (
         <Badge
           variant="outline"
-          className="text-xs gap-1 border-amber-500/50 text-amber-400"
+          className="text-xs gap-1 border-amber-500/50 text-amber-400 whitespace-nowrap"
         >
           <Ban className="h-3 w-3" /> NOT NULL
         </Badge>
       )}
       {column.default && (
-        <Badge variant="outline" className="text-xs font-mono">
+        <Badge variant="outline" className="text-xs font-mono whitespace-nowrap">
           = {column.default}
         </Badge>
       )}
